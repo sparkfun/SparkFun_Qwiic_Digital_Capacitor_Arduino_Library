@@ -20,11 +20,16 @@ public:
     //Digital capacitor functions
     uint32_t readRegisters();
 
-    bool writeVolatileCapacitance(uint16_t capacitance);
+    uint16_t calculateShuntCode(float capacitance);
+    uint16_t calculateSeriesCode(float capacitance);
+    float calculateShuntCapacitance(uint16_t code);
+    float calculateSeriesCapacitance(uint16_t code);
+
+    bool writeVolatileCapacitance(uint16_t code);
     uint16_t readVolatileCapacitance();
 
     bool eraseNonVolatileRegisters();
-    bool writeNonVolatileCapacitance(uint16_t capacitance);
+    bool writeNonVolatileCapacitance(uint16_t code);
     uint16_t readNonVolatileCapacitance();
     bool setNonVolatileMode();
 };

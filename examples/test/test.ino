@@ -12,7 +12,7 @@ void setup() {
   }
   Serial.println("Digital capacitor acknowledged!");
 
-  myCapacitor.writeVolatileCapacitance(0x0123);
+  myCapacitor.writeVolatileCapacitance(0xA8);
   myCapacitor.readVolatileCapacitance();
 }
 
