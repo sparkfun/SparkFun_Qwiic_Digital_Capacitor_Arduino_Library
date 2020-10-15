@@ -25,12 +25,18 @@ public:
     float calculateShuntCapacitance(uint16_t code);
     float calculateSeriesCapacitance(uint16_t code);
 
+    //Volatile memory
     bool writeVolatileCapacitance(uint16_t code);
+    // bool writeVolatileCapacitance(float capacitance);   //User specifies capacitance in pF
     uint16_t readVolatileCapacitance();
+    // float readVolatileCapacitance();    //Function returns capacitance in pF
 
+    //Non-volatile memory
     bool eraseNonVolatileRegisters();
     bool writeNonVolatileCapacitance(uint16_t code);
+    // bool writeNonVolatileCapacitance(float capacitance);    //User specifies capacitance in pF
     uint16_t readNonVolatileCapacitance();
+    // float readNonVolatileCapacitance();     //Function returns capacitance in pF
     bool setNonVolatileMode();
 };
 

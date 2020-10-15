@@ -28,7 +28,7 @@ uint32_t digitalCap::readRegisters()
         readBytes = readBytes | (_i2cPort->read() << count * 8); //Concatenate all four bytes into one number, datasheet pg 17
         count--;
     }
-    // Serial.println(readBytes, HEX);
+    Serial.println(readBytes, HEX);
     return readBytes;
 }
 
@@ -108,8 +108,8 @@ uint16_t digitalCap::readVolatileCapacitance()
     readBytes = readBytes & ~0xFE00FFFF;
     uint16_t volCap = readBytes >> 16;
 
-    // Serial.print("0x");
-    // Serial.println(volCap, HEX);
+    Serial.print("0x");
+    Serial.println(volCap, HEX);
     return volCap;
 }
 
