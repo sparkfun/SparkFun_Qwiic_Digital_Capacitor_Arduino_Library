@@ -15,15 +15,17 @@ private:
 public:
     //Device status
     bool begin(uint8_t address = DIGITAL_CAPACITOR_ADDR_DEFAULT, TwoWire &wirePort = Wire); //Sets device I2C address to default over whatever port the user specifies
-    bool isConnected(); //Returns true if the digital capacitor acknowledges over I2C
+    bool isConnected();                                                                     //Returns true if the digital capacitor acknowledges over I2C
 
     //Digital capacitor functions
-    bool writeVolatileCapacitance(uint8_t capacitance);
-    uint8_t readVolatileCapacitance();
-    
+    uint32_t readRegisters();
+
+    bool writeVolatileCapacitance(uint16_t capacitance);
+    uint16_t readVolatileCapacitance();
+
     bool eraseNonVolatileRegisters();
-    bool writeNonVolatileCapacitance(uint8_t capacitance);
-    uint8_t readNonVolatileCapacitance();
+    bool writeNonVolatileCapacitance(uint16_t capacitance);
+    uint16_t readNonVolatileCapacitance();
     bool setNonVolatileMode();
 };
 
