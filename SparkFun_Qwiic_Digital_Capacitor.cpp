@@ -35,7 +35,7 @@ uint32_t digitalCap::readRegisters()
 //"capacitance" parameter is in pF
 uint16_t digitalCap::calculateShuntCode(float capacitance)
 {
-    //Edge-case gaurds
+    //Edge-case guards
     if (capacitance > 194)
         capacitance = 194;
     else if (capacitance < 12.5)
@@ -49,7 +49,7 @@ uint16_t digitalCap::calculateShuntCode(float capacitance)
 //"capacitance" parameter is in pF
 uint16_t digitalCap::calculateSeriesCode(float capacitance)
 {
-    //Edge-case gaurds
+    //Edge-case guards
     if (capacitance > 194)
         capacitance = 194;
     else if (capacitance < 1.7)
@@ -62,7 +62,7 @@ uint16_t digitalCap::calculateSeriesCode(float capacitance)
 
 float digitalCap::calculateShuntCapacitance(uint16_t code)
 {
-    //Edge-case gaurds
+    //Edge-case guards
     if (code > 511)
         code = 511;
 
@@ -73,7 +73,7 @@ float digitalCap::calculateShuntCapacitance(uint16_t code)
 
 float digitalCap::calculateSeriesCapacitance(uint16_t code)
 {
-    //Edge-case gaurds
+    //Edge-case guards
     if (code > 511)
         code = 511;
 
@@ -113,6 +113,83 @@ uint16_t digitalCap::readVolatileCapacitance()
     return volCap;
 }
 
+bool digitalCap::eraseNonVolatileRegisters()
+{
+    _i2cPort->beginTransmission(_deviceAddress);
+    _i2cPort->write(0xC0);
+    _i2cPort->write(0x00);
+    if (_i2cPort->endTransmission() != 0){
+        Serial.println("FALSE!");
+        return false;
+    }
+    
+    _i2cPort->beginTransmission(_deviceAddress);
+    _i2cPort->write(0xA0);
+    _i2cPort->write(0x00);
+    if (_i2cPort->endTransmission() != 0){
+        Serial.println("FALSE!");
+        return false;
+    }
+
+    _i2cPort->beginTransmission(_deviceAddress);
+    _i2cPort->write(0x80);
+    _i2cPort->write(0x00);
+    if (_i2cPort->endTransmission() != 0){
+        Serial.println("FALSE!");
+        return false;
+    }
+    
+    return true;
+}
+bool digitalCap::writeNonVolatileCapacitance(uint16_t code)
+{
+    eraseNonVolatileRegisters();
+    
+    if (code > 511)
+        code = 511;
+    if (code < 0)
+        code = 0;
+
+    //First, separate into bytes
+    uint16_t byte2 = code & ~0xFF00;    //LSB
+    uint16_t byte1 = (code & ~0xFF) >> 8;   //MSB
+
+    //Then, separate into nibbles
+    uint8_t nib3 = (uint8_t)byte2 & ~0xF0; 
+    uint8_t nib2 = ((uint8_t)byte2 & ~0x0F) >> 4;
+    uint8_t nib1 = byte1;
+
+    Serial.println(nib1, HEX);
+    Serial.println(nib2, HEX);
+    Serial.println(nib3, HEX);
+
+    //Now, write one nibble at a time
+    _i2cPort->beginTransmission(_deviceAddress);
+    _i2cPort->write(0xC0);
+    _i2cPort->write(nib1);
+    if (_i2cPort->endTransmission() != 0){
+        Serial.println("FALSE!");
+        return false;
+    }
+
+    _i2cPort->beginTransmission(_deviceAddress);
+    _i2cPort->write(0xA0);
+    _i2cPort->write(nib2);
+    if (_i2cPort->endTransmission() != 0){
+        Serial.println("FALSE!");
+        return false;
+    }
+
+    _i2cPort->beginTransmission(_deviceAddress);
+    _i2cPort->write(0x80);
+    _i2cPort->write(nib3);
+    if (_i2cPort->endTransmission() != 0){
+        Serial.println("FALSE!");
+        return false;
+    }
+
+    return true;
+}
 //TODO: have not tested yet...
 bool digitalCap::setNonVolatileMode()
 {
