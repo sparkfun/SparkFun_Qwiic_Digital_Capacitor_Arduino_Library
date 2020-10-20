@@ -18,6 +18,9 @@ public:
     bool isConnected();                                                                     //Returns true if the digital capacitor acknowledges over I2C
 
     //Digital capacitor functions
+    bool setCapacitance(float capacitance, bool nvm);
+    float getCapacitance();
+
     uint32_t readRegisters();
 
     uint16_t calculateShuntCode(float capacitance);

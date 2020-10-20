@@ -118,15 +118,30 @@ bool digitalCap::eraseNonVolatileRegisters()
     _i2cPort->beginTransmission(_deviceAddress);
     _i2cPort->write(0xC0);
     _i2cPort->write(0x00);
-    if (_i2cPort->endTransmission() != 0){
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+
+    if (_i2cPort->endTransmission() != 0)
+    {
         Serial.println("FALSE!");
         return false;
     }
-    
+
     _i2cPort->beginTransmission(_deviceAddress);
     _i2cPort->write(0xA0);
     _i2cPort->write(0x00);
-    if (_i2cPort->endTransmission() != 0){
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    if (_i2cPort->endTransmission() != 0)
+    {
         Serial.println("FALSE!");
         return false;
     }
@@ -134,28 +149,35 @@ bool digitalCap::eraseNonVolatileRegisters()
     _i2cPort->beginTransmission(_deviceAddress);
     _i2cPort->write(0x80);
     _i2cPort->write(0x00);
-    if (_i2cPort->endTransmission() != 0){
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    if (_i2cPort->endTransmission() != 0)
+    {
         Serial.println("FALSE!");
         return false;
     }
-    
+
     return true;
 }
 bool digitalCap::writeNonVolatileCapacitance(uint16_t code)
 {
     eraseNonVolatileRegisters();
-    
+
     if (code > 511)
         code = 511;
     if (code < 0)
         code = 0;
 
     //First, separate into bytes
-    uint16_t byte2 = code & ~0xFF00;    //LSB
-    uint16_t byte1 = (code & ~0xFF) >> 8;   //MSB
+    uint16_t byte2 = code & ~0xFF00;      //LSB
+    uint16_t byte1 = (code & ~0xFF) >> 8; //MSB
 
     //Then, separate into nibbles
-    uint8_t nib3 = (uint8_t)byte2 & ~0xF0; 
+    uint8_t nib3 = (uint8_t)byte2 & ~0xF0;
     uint8_t nib2 = ((uint8_t)byte2 & ~0x0F) >> 4;
     uint8_t nib1 = byte1;
 
@@ -167,7 +189,14 @@ bool digitalCap::writeNonVolatileCapacitance(uint16_t code)
     _i2cPort->beginTransmission(_deviceAddress);
     _i2cPort->write(0xC0);
     _i2cPort->write(nib1);
-    if (_i2cPort->endTransmission() != 0){
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    if (_i2cPort->endTransmission() != 0)
+    {
         Serial.println("FALSE!");
         return false;
     }
@@ -175,7 +204,14 @@ bool digitalCap::writeNonVolatileCapacitance(uint16_t code)
     _i2cPort->beginTransmission(_deviceAddress);
     _i2cPort->write(0xA0);
     _i2cPort->write(nib2);
-    if (_i2cPort->endTransmission() != 0){
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    if (_i2cPort->endTransmission() != 0)
+    {
         Serial.println("FALSE!");
         return false;
     }
@@ -183,7 +219,14 @@ bool digitalCap::writeNonVolatileCapacitance(uint16_t code)
     _i2cPort->beginTransmission(_deviceAddress);
     _i2cPort->write(0x80);
     _i2cPort->write(nib3);
-    if (_i2cPort->endTransmission() != 0){
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    _i2cPort->write(0xFF);
+    if (_i2cPort->endTransmission() != 0)
+    {
         Serial.println("FALSE!");
         return false;
     }
