@@ -1,5 +1,8 @@
 /**************************************************************************************
- * Set and get the capacitance of NCD2400M on the Qwiic Digital Capacitor breakout board.
+ * Set and get the capacitance of NCD2400M on the Qwiic Digital Capacitor breakout board
+ * and the configuration of the capacitor. Series configuration is when the capacitor (CP
+ * and CN) is connected in series within a system and shunt configuration is when CN is 
+ * connected to ground.
  * The set and getCapacitance() functions default to shunt capacitor configuration and
  * non-volatile memory write.
  * The range of the capacitor is:
@@ -35,10 +38,16 @@ void setup() {
     Serial.println("Digital capacitor did not acknowledge. Freezing.");
     while(1);
   }
-  Serial.println("Digital capacitor acknowledged!"); 
+  Serial.println("Digital capacitor acknowledged!");
 
-  myCapacitor.setCapacitance(86);
-  Serial.print("Capacitance set: ");
+  //Choose the capacitor configuration mode below
+  //Only uncomment up to ONE of the following lines
+  //If the configuration mode is not set, the library defaults to shunt configuration
+//  myCapacitor.shuntConfigMode();
+  myCapacitor.seriesConfigMode();
+
+  myCapacitor.setCapacitance(100);
+  Serial.println("Capacitance set: ");
   Serial.println(myCapacitor.getCapacitance());
 }
 

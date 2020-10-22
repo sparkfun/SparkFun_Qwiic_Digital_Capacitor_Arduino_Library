@@ -53,17 +53,16 @@ public:
     bool isConnected();                                                                     //Returns true if the digital capacitor acknowledges over I2C
 
     //Digital capacitor functions
-    bool setCapacitance(float capacitance, bool config, bool nvm = true); //Function to set the capacitance of the digital capacitor. Parameters are described below:
-                                                                          //capacitance = float in pF
-                                                                          //config = 1 for shunt configuration
-                                                                          //config = 0 for serires configuration
-                                                                          //nvm = 1 for non-volatile memory write, default
-                                                                          //nvm = 0 for volatile memory write
-    float getCapacitance(bool config, bool nvm = true);                   //Function returns float of the current capacitance. Parameters are described below:
-                                                                          //config = 1 for shunt configuration
-                                                                          //config = 0 for series configuration
-                                                                          //nvm = 1 for returning capacitance in non-volatile memory, default
-                                                                          //nvm = 0 for returning capacitance in volatile memory
+    bool setCapacitance(float capacitance, bool nvm = true); //Function to set the capacitance of the digital capacitor. Parameters are described below:
+                                                             //capacitance = float in pF
+                                                             //nvm = 1 for non-volatile memory write, default
+                                                             //nvm = 0 for volatile memory write
+    float getCapacitance(bool nvm = true);                   //Function returns float of the current capacitance. Parameters are described below:
+                                                             //nvm = 1 for returning capacitance in non-volatile memory, default
+                                                             //nvm = 0 for returning capacitance in volatile memory
+
+    void shuntConfigMode();
+    void seriesConfigMode();
 
     //Helper functions
     //Capacitance code conversion functions
@@ -79,6 +78,7 @@ public:
     uint16_t readVolatileCapacitance();           //Returns the capacitance code in the volatile memory registers
 
     //Non-volatile memory functions
+    bool writeNVM(uint8_t byte1, uint8_t byte2);     //Writes the two config bytes and don't cares to fulfill programming time of NVM write
     bool eraseNonVolatileRegisters();                //Clears the non-volatile memory registers. This is needed before performing a NVM write
     bool writeNonVolatileCapacitance(uint16_t code); //Writes the calculated capacitance code to the non-volatile memory registers
     uint16_t readNonVolatileCapacitance();           //Returns the capacitance code in the non-volatile memory registers

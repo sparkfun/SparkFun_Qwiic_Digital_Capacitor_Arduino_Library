@@ -33,6 +33,10 @@ Distributed as-is; no warranty is given.
 
 #include "SparkFun_Qwiic_Digital_Capacitor.h"
 
+bool config = 1; //Global bool to define the configuration of the capacitor \
+                    //1 = shunt configuration (CN connected to GND)            \
+                    //2 = series configuration (capacitor in series with system)
+
 //Initialize the I2C port
 bool digitalCap::begin(uint8_t address, TwoWire &wirePort)
 {
@@ -54,11 +58,9 @@ bool digitalCap::isConnected()
 
 //This function sets the non-volatile capacitance by default
 //capacitance float in pF
-//config = 1 for shunt configuration
-//config = 0 for series configuration
 //nvm = 1 for non-volatile memory write, default
 //nvm = 0 for volatile memory write
-bool digitalCap::setCapacitance(float capacitance, bool config, bool nvm)
+bool digitalCap::setCapacitance(float capacitance, bool nvm)
 {
     //First, figure out the code to write
     uint16_t code;
@@ -85,11 +87,9 @@ bool digitalCap::setCapacitance(float capacitance, bool config, bool nvm)
 }
 
 //This function returns the capacitance, converted to pF, in the non-volatile register by default
-//config = 1 for shunt configuration
-//config = 0 for series configuration
 //nvm = 1 for non-volatile memory write, default
 //nvm = 0 for volatile memory write
-float digitalCap::getCapacitance(bool config, bool nvm)
+float digitalCap::getCapacitance(bool nvm)
 {
     //First, read the capacitance code from the register
     uint16_t code;
@@ -113,6 +113,18 @@ float digitalCap::getCapacitance(bool config, bool nvm)
     }
 }
 
+//Set to shunt configuration mode
+void digitalCap::shuntConfigMode()
+{
+    config = 1;
+}
+
+//Set to series configuration mode
+void digitalCap::seriesConfigMode()
+{
+    config = 0;
+}
+
 //Returns the 4 bytes of NCD2400M memory, datasheet pg 17
 uint32_t digitalCap::readRegisters()
 {
@@ -121,7 +133,9 @@ uint32_t digitalCap::readRegisters()
     _i2cPort->requestFrom(_deviceAddress, 4);
     while (_i2cPort->available())
     {
-        readBytes = readBytes | (_i2cPort->read() << count * 8); //Concatenate all four bytes into one number, datasheet pg 17
+        uint32_t temp = _i2cPort->read();
+        temp = temp << count * 8;
+        readBytes = readBytes | temp; //Concatenate all four bytes into one number, datasheet pg 17
         count--;
     }
 
@@ -219,51 +233,38 @@ uint16_t digitalCap::readVolatileCapacitance()
     return volCap;
 }
 
+//Writes the two config bytes and don't care to fulfill programming time of a NVM write
+bool digitalCap::writeNVM(uint8_t byte1, uint8_t byte2)
+{
+    _i2cPort->beginTransmission(_deviceAddress);
+    _i2cPort->write(byte1);
+    _i2cPort->write(byte2);
+
+    //Datasheet pg 19 mentions the non-volatile programming time is 5 ms
+    //Write don't care values, i2c buffer is only 32 bytes long
+    //This write takes 2.8ms to complete on ATMega328
+    for (uint8_t i = 0; i < 30; i++)
+    {
+        _i2cPort->write(0xFF);
+    }
+
+    if (_i2cPort->endTransmission() != 0)
+        return false;
+
+    //This delay is to round out the overall delay to 5 ms
+    delay(3);
+    return true;
+}
+
 //Clears the non-volatile memory registers. This is needed before performing a NVM write
 bool digitalCap::eraseNonVolatileRegisters()
 {
-    _i2cPort->beginTransmission(_deviceAddress);
-    _i2cPort->write(0xC0);
-    _i2cPort->write(0x00);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-
-    if (_i2cPort->endTransmission() != 0)
-    {
+    if (writeNVM(0xC0, 0x00) == false)
         return false;
-    }
-
-    _i2cPort->beginTransmission(_deviceAddress);
-    _i2cPort->write(0xA0);
-    _i2cPort->write(0x00);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    if (_i2cPort->endTransmission() != 0)
-    {
+    if (writeNVM(0xA0, 0x00) == false)
         return false;
-    }
-
-    _i2cPort->beginTransmission(_deviceAddress);
-    _i2cPort->write(0x80);
-    _i2cPort->write(0x00);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    if (_i2cPort->endTransmission() != 0)
-    {
+    if (writeNVM(0x80, 0x00) == false)
         return false;
-    }
 
     return true; //Success
 }
@@ -290,47 +291,12 @@ bool digitalCap::writeNonVolatileCapacitance(uint16_t code)
     // Serial.println(nib3, HEX);
 
     //Now, write one nibble at a time
-    _i2cPort->beginTransmission(_deviceAddress);
-    _i2cPort->write(0xC0);
-    _i2cPort->write(nib1);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    if (_i2cPort->endTransmission() != 0)
-    {
+    if (writeNVM(0xC0, nib1) == false)
         return false;
-    }
-
-    _i2cPort->beginTransmission(_deviceAddress);
-    _i2cPort->write(0xA0);
-    _i2cPort->write(nib2);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    if (_i2cPort->endTransmission() != 0)
-    {
+    if (writeNVM(0xA0, nib2) == false)
         return false;
-    }
-
-    _i2cPort->beginTransmission(_deviceAddress);
-    _i2cPort->write(0x80);
-    _i2cPort->write(nib3);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    _i2cPort->write(0xFF);
-    if (_i2cPort->endTransmission() != 0)
-    {
+    if (writeNVM(0x80, nib3) == false)
         return false;
-    }
 
     return true; //Success
 }
@@ -340,7 +306,7 @@ uint16_t digitalCap::readNonVolatileCapacitance()
 {
     uint32_t readBytes = readRegisters();
     readBytes = readBytes & ~0xFFFFFE00;
-    uint nonVolCap = readBytes;
+    uint16_t nonVolCap = readBytes;
 
     // Serial.print("0x");
     // Serial.println(nonVolCap, HEX);
