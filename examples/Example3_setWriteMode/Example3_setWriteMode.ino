@@ -25,7 +25,7 @@
  * 
  * Distributed as-is; no warranty is given.
  **************************************************************************************/
-
+#include "Wire.h"
 #include "SparkFun_Qwiic_Digital_Capacitor.h"
 
 digitalCap myCapacitor;
