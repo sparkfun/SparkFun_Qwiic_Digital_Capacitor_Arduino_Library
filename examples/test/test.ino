@@ -12,12 +12,13 @@ void setup() {
   }
   Serial.println("Digital capacitor acknowledged!");
 
-//  myCapacitor.writeVolatileCapacitance(511);
-//  myCapacitor.readVolatileCapacitance();
-
-  myCapacitor.writeNonVolatileCapacitance(0x6);
-  myCapacitor.setNonVolatileMode();
-  myCapacitor.readRegisters();
+  //The parameters for the setCapacitance() function are as follows:
+  //First, capacitance to set in pF
+  //Then configuration of capacitor: 1 for shunt, 0 for series
+  //Optional parameter for type of write
+  myCapacitor.setCapacitance(86, 1);
+  Serial.print("Capacitance set: ");
+  Serial.println(myCapacitor.getCapacitance(1));
 }
 
 void loop() {

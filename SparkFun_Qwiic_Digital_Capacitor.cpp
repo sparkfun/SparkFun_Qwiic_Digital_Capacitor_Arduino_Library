@@ -18,6 +18,50 @@ bool digitalCap::isConnected()
     return false;
 }
 
+//capacitance float in pF
+//config = 1 for shunt configuration
+//config = 0 for series configuration
+//nvm = 1 for non-volatile memory write, default
+//nvm = 0 for volatile memory write
+bool digitalCap::setCapacitance(float capacitance, bool config, bool nvm)
+{
+    //First, figure out the code to write
+    uint16_t code;
+    if (config == true) {
+        code = calculateShuntCode(capacitance);
+    } else {
+        code = calculateSeriesCode(capacitance);
+    }
+
+    //Next, figure out what kind of write needs to be made
+    if (nvm == true) {
+        eraseNonVolatileRegisters();
+        writeNonVolatileCapacitance(code);
+        return setNonVolatileMode();
+    } else {    //Do a write to volatile registers
+        return writeVolatileCapacitance(code);
+    }
+}
+
+//This function returns the capacitance in the non-volatile register
+float digitalCap::getCapacitance(bool config, bool nvm)
+{
+    //First, read the capacitance code from the register
+    uint16_t code;
+    if (nvm == true) {
+        code = readNonVolatileCapacitance();
+    } else {
+        code = readVolatileCapacitance();
+    }
+
+    float cap;
+    if (config == true) {
+        return cap = calculateShuntCapacitance(code);
+    } else {
+        return cap = calculateSeriesCapacitance(code);
+    }
+}
+
 uint32_t digitalCap::readRegisters()
 {
     uint8_t count = 3;
@@ -28,7 +72,8 @@ uint32_t digitalCap::readRegisters()
         readBytes = readBytes | (_i2cPort->read() << count * 8); //Concatenate all four bytes into one number, datasheet pg 17
         count--;
     }
-    Serial.println(readBytes, HEX);
+
+    // Serial.println(readBytes, HEX);
     return readBytes;
 }
 
@@ -42,7 +87,7 @@ uint16_t digitalCap::calculateShuntCode(float capacitance)
         capacitance = 12.5;
 
     float code = (capacitance - 12.5) / 0.355; //Eq from datasheet pg 6
-    Serial.println((uint16_t)code);
+    // Serial.println((uint16_t)code);
     return (uint16_t)code;
 }
 
@@ -56,7 +101,7 @@ uint16_t digitalCap::calculateSeriesCode(float capacitance)
         capacitance = 1.7;
 
     float code = (capacitance - 1.7) / 0.376; //Eq from datasheet pg 6
-    Serial.println((uint16_t)code);
+    // Serial.println((uint16_t)code);
     return (uint16_t)code;
 }
 
@@ -67,7 +112,7 @@ float digitalCap::calculateShuntCapacitance(uint16_t code)
         code = 511;
 
     float capacitance = 12.5 + 0.355 * code;
-    Serial.println(capacitance);
+    // Serial.println(capacitance);
     return capacitance;
 }
 
@@ -78,7 +123,7 @@ float digitalCap::calculateSeriesCapacitance(uint16_t code)
         code = 511;
 
     float capacitance = 1.7 + 0.376 * code;
-    Serial.println(capacitance);
+    // Serial.println(capacitance);
     return capacitance;
 }
 
@@ -108,8 +153,8 @@ uint16_t digitalCap::readVolatileCapacitance()
     readBytes = readBytes & ~0xFE00FFFF;
     uint16_t volCap = readBytes >> 16;
 
-    Serial.print("0x");
-    Serial.println(volCap, HEX);
+    // Serial.print("0x");
+    // Serial.println(volCap, HEX);
     return volCap;
 }
 
@@ -127,7 +172,6 @@ bool digitalCap::eraseNonVolatileRegisters()
 
     if (_i2cPort->endTransmission() != 0)
     {
-        Serial.println("FALSE!");
         return false;
     }
 
@@ -142,7 +186,6 @@ bool digitalCap::eraseNonVolatileRegisters()
     _i2cPort->write(0xFF);
     if (_i2cPort->endTransmission() != 0)
     {
-        Serial.println("FALSE!");
         return false;
     }
 
@@ -157,7 +200,6 @@ bool digitalCap::eraseNonVolatileRegisters()
     _i2cPort->write(0xFF);
     if (_i2cPort->endTransmission() != 0)
     {
-        Serial.println("FALSE!");
         return false;
     }
 
@@ -165,8 +207,6 @@ bool digitalCap::eraseNonVolatileRegisters()
 }
 bool digitalCap::writeNonVolatileCapacitance(uint16_t code)
 {
-    eraseNonVolatileRegisters();
-
     if (code > 511)
         code = 511;
     if (code < 0)
@@ -181,9 +221,9 @@ bool digitalCap::writeNonVolatileCapacitance(uint16_t code)
     uint8_t nib2 = ((uint8_t)byte2 & ~0x0F) >> 4;
     uint8_t nib1 = byte1;
 
-    Serial.println(nib1, HEX);
-    Serial.println(nib2, HEX);
-    Serial.println(nib3, HEX);
+    // Serial.println(nib1, HEX);
+    // Serial.println(nib2, HEX);
+    // Serial.println(nib3, HEX);
 
     //Now, write one nibble at a time
     _i2cPort->beginTransmission(_deviceAddress);
@@ -197,7 +237,6 @@ bool digitalCap::writeNonVolatileCapacitance(uint16_t code)
     _i2cPort->write(0xFF);
     if (_i2cPort->endTransmission() != 0)
     {
-        Serial.println("FALSE!");
         return false;
     }
 
@@ -212,7 +251,6 @@ bool digitalCap::writeNonVolatileCapacitance(uint16_t code)
     _i2cPort->write(0xFF);
     if (_i2cPort->endTransmission() != 0)
     {
-        Serial.println("FALSE!");
         return false;
     }
 
@@ -227,13 +265,23 @@ bool digitalCap::writeNonVolatileCapacitance(uint16_t code)
     _i2cPort->write(0xFF);
     if (_i2cPort->endTransmission() != 0)
     {
-        Serial.println("FALSE!");
         return false;
     }
 
     return true;
 }
-//TODO: have not tested yet...
+
+uint16_t digitalCap::readNonVolatileCapacitance()
+{
+    uint32_t readBytes = readRegisters();
+    readBytes = readBytes & ~0xFFFFFE00;
+    uint nonVolCap = readBytes;
+
+    // Serial.print("0x");
+    // Serial.println(nonVolCap, HEX);
+    return nonVolCap;
+}
+
 bool digitalCap::setNonVolatileMode()
 {
     _i2cPort->beginTransmission(_deviceAddress);

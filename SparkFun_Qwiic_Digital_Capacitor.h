@@ -18,11 +18,12 @@ public:
     bool isConnected();                                                                     //Returns true if the digital capacitor acknowledges over I2C
 
     //Digital capacitor functions
-    bool setCapacitance(float capacitance, bool nvm);
-    float getCapacitance();
+    bool setCapacitance(float capacitance, bool config, bool nvm = true);
+    float getCapacitance(bool config, bool nvm = true);
 
     uint32_t readRegisters();
 
+    //Capacitance code conversion functions
     uint16_t calculateShuntCode(float capacitance);
     uint16_t calculateSeriesCode(float capacitance);
     float calculateShuntCapacitance(uint16_t code);
@@ -30,16 +31,12 @@ public:
 
     //Volatile memory
     bool writeVolatileCapacitance(uint16_t code);
-    // bool writeVolatileCapacitance(float capacitance);   //User specifies capacitance in pF
     uint16_t readVolatileCapacitance();
-    // float readVolatileCapacitance();    //Function returns capacitance in pF
 
     //Non-volatile memory
     bool eraseNonVolatileRegisters();
     bool writeNonVolatileCapacitance(uint16_t code);
-    // bool writeNonVolatileCapacitance(float capacitance);    //User specifies capacitance in pF
     uint16_t readNonVolatileCapacitance();
-    // float readNonVolatileCapacitance();     //Function returns capacitance in pF
     bool setNonVolatileMode();
 };
 
